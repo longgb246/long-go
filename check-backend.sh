@@ -133,34 +133,34 @@ echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━�
 
 FILES_OK=true
 
-if [ -f "server/bin/katago" ]; then
+if [ -f "backend/bin/katago" ]; then
     echo -e "${GREEN}✅ KataGo 可执行文件存在${NC}"
-    ls -lh server/bin/katago | awk '{printf "   大小: %s, 修改时间: %s %s %s\n", $5, $6, $7, $8}'
+    ls -lh backend/bin/katago | awk '{printf "   大小: %s, 修改时间: %s %s %s\n", $5, $6, $7, $8}'
 else
     echo -e "${RED}❌ KataGo 可执行文件不存在${NC}"
-    echo "   路径: server/bin/katago"
+    echo "   路径: backend/bin/katago"
     FILES_OK=false
 fi
 
 echo ""
 
-if [ -f "server/models/katago_model.bin.gz" ]; then
+if [ -f "backend/models/katago_model.bin.gz" ]; then
     echo -e "${GREEN}✅ KataGo 模型文件存在${NC}"
-    ls -lh server/models/katago_model.bin.gz | awk '{printf "   大小: %s, 修改时间: %s %s %s\n", $5, $6, $7, $8}'
+    ls -lh backend/models/katago_model.bin.gz | awk '{printf "   大小: %s, 修改时间: %s %s %s\n", $5, $6, $7, $8}'
 else
     echo -e "${RED}❌ KataGo 模型文件不存在${NC}"
-    echo "   路径: server/models/katago_model.bin.gz"
+    echo "   路径: backend/models/katago_model.bin.gz"
     FILES_OK=false
 fi
 
 echo ""
 
-if [ -f "server/katago_config.cfg" ]; then
+if [ -f "backend/katago_config.cfg" ]; then
     echo -e "${GREEN}✅ KataGo 配置文件存在${NC}"
-    ls -lh server/katago_config.cfg | awk '{printf "   大小: %s, 修改时间: %s %s %s\n", $5, $6, $7, $8}'
+    ls -lh backend/katago_config.cfg | awk '{printf "   大小: %s, 修改时间: %s %s %s\n", $5, $6, $7, $8}'
 else
     echo -e "${RED}❌ KataGo 配置文件不存在${NC}"
-    echo "   路径: server/katago_config.cfg"
+    echo "   路径: backend/katago_config.cfg"
     FILES_OK=false
 fi
 
@@ -231,7 +231,7 @@ else
     fi
     
     if [ "$HEALTH_OK" = false ] && [ "$NODE_RUNNING" = true ]; then
-        echo "  3. 查看日志: ${GREEN}tail -f server/logs/katago.log${NC}"
+        echo "  3. 查看日志: ${GREEN}tail -f backend/logs/katago.log${NC}"
         echo "  4. 重启服务: ${GREEN}pkill -f 'node.*katagoServer' && ./start-backend.sh${NC}"
     fi
     

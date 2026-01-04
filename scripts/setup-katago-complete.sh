@@ -12,14 +12,14 @@ echo ""
 
 # 创建目录
 echo "📁 创建必要的目录..."
-mkdir -p server/models
+mkdir -p backend/models
 echo "✅ 目录创建完成"
 echo ""
 
 # 下载神经网络模型
 echo "📥 下载 KataGo 神经网络模型（约 200MB）..."
 MODEL_URL="https://media.katagotraining.org/uploaded/networks/models/kata1/kata1-b18c384nbt-s7709731328-d3715293823.bin.gz"
-MODEL_FILE="server/models/katago_model.bin.gz"
+MODEL_FILE="backend/models/katago_model.bin.gz"
 
 if [ -f "$MODEL_FILE" ]; then
     echo "✅ 模型文件已存在: $MODEL_FILE"

@@ -14,6 +14,9 @@ cd "$SCRIPT_DIR"
 echo -e "${BLUE}🚀 启动前端应用...${NC}"
 echo ""
 
+# 进入前端目录
+cd frontend
+
 # 检查 package.json 是否存在
 if [ ! -f "package.json" ]; then
     echo -e "${RED}❌ 错误：找不到 package.json${NC}"

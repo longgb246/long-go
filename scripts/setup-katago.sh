@@ -34,14 +34,14 @@ echo ""
 
 # 创建模型目录
 echo "📁 创建模型目录..."
-mkdir -p server/models
-echo "✅ 模型目录已创建: server/models"
+mkdir -p backend/models
+echo "✅ 模型目录已创建: backend/models"
 echo ""
 
 # 下载 KataGo 模型
 echo "📥 下载 KataGo 神经网络模型..."
 MODEL_URL="https://github.com/lightvector/KataGo/releases/download/v1.13.2/kata1-b18c384nbt-s7709731328-d3715293823.bin.gz"
-MODEL_FILE="server/models/katago_model.bin.gz"
+MODEL_FILE="backend/models/katago_model.bin.gz"
 
 if [ -f "$MODEL_FILE" ]; then
     echo "✅ 模型文件已存在: $MODEL_FILE"
@@ -55,10 +55,10 @@ echo ""
 
 # 生成默认配置文件
 echo "⚙️  生成 KataGo 配置文件..."
-if [ -f "server/katago_config.cfg" ]; then
-    echo "✅ 配置文件已存在: server/katago_config.cfg"
+if [ -f "backend/katago_config.cfg" ]; then
+    echo "✅ 配置文件已存在: backend/katago_config.cfg"
 else
-    katago genconfig -model "$MODEL_FILE" -output server/katago_config.cfg
+    katago genconfig -model "$MODEL_FILE" -output backend/katago_config.cfg
     echo "✅ 配置文件已生成"
 fi
 echo ""
@@ -77,7 +77,7 @@ echo ""
 
 # 测试 KataGo
 echo "🧪 测试 KataGo 是否正常工作..."
-echo "boardsize 19" | katago gtp -model "$MODEL_FILE" -config server/katago_config.cfg 2>/dev/null | head -n 5
+echo "boardsize 19" | katago gtp -model "$MODEL_FILE" -config backend/katago_config.cfg 2>/dev/null | head -n 5
 echo "✅ KataGo 测试通过"
 echo ""
 

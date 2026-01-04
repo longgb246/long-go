@@ -13,7 +13,7 @@ if ! command -v katago &> /dev/null; then
 fi
 
 # 检查服务器依赖
-if [ ! -d "server/node_modules" ]; then
+if [ ! -d "backend/node_modules" ]; then
     echo "📦 安装服务器依赖..."
     cd server && npm install && cd ..
 fi

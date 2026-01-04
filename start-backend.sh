@@ -15,29 +15,29 @@ echo -e "${BLUE}🚀 启动 KataGo 后端服务...${NC}"
 echo ""
 
 # 检查 KataGo 是否存在
-if [ ! -f "server/bin/katago" ]; then
+if [ ! -f "backend/bin/katago" ]; then
     echo -e "${RED}❌ 错误：找不到 KataGo 可执行文件${NC}"
-    echo "   路径: server/bin/katago"
+    echo "   路径: backend/bin/katago"
     exit 1
 fi
 
 # 检查模型文件是否存在
-if [ ! -f "server/models/katago_model.bin.gz" ]; then
+if [ ! -f "backend/models/katago_model.bin.gz" ]; then
     echo -e "${RED}❌ 错误：找不到 KataGo 模型文件${NC}"
-    echo "   路径: server/models/katago_model.bin.gz"
+    echo "   路径: backend/models/katago_model.bin.gz"
     exit 1
 fi
 
 # 检查配置文件是否存在
-if [ ! -f "server/katago_config.cfg" ]; then
+if [ ! -f "backend/katago_config.cfg" ]; then
     echo -e "${RED}❌ 错误：找不到 KataGo 配置文件${NC}"
-    echo "   路径: server/katago_config.cfg"
+    echo "   路径: backend/katago_config.cfg"
     exit 1
 fi
 
-echo -e "${GREEN}✅ KataGo 可执行文件: server/bin/katago${NC}"
-echo -e "${GREEN}✅ 模型文件: server/models/katago_model.bin.gz${NC}"
-echo -e "${GREEN}✅ 配置文件: server/katago_config.cfg${NC}"
+echo -e "${GREEN}✅ KataGo 可执行文件: backend/bin/katago${NC}"
+echo -e "${GREEN}✅ 模型文件: backend/models/katago_model.bin.gz${NC}"
+echo -e "${GREEN}✅ 配置文件: backend/katago_config.cfg${NC}"
 echo ""
 
 # 检查端口是否被占用
@@ -50,7 +50,7 @@ fi
 
 # 启动后端服务器
 echo -e "${BLUE}📡 启动后端服务器 (端口 3001)...${NC}"
-cd server
+cd backend
 node katagoServer.js &
 SERVER_PID=$!
 cd ..
@@ -71,7 +71,7 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
         echo -e "${RED}❌ 后端进程异常退出！${NC}"
         echo ""
         echo "请检查日志："
-        echo "  tail -f server/logs/katago.log"
+        echo "  tail -f backend/logs/katago.log"
         exit 1
     fi
     
@@ -107,7 +107,7 @@ if [ "$SERVICE_READY" = true ]; then
     echo -e "${BLUE}💡 提示：${NC}"
     echo "  - 使用 ${YELLOW}./check-backend.sh${NC} 检查服务状态"
     echo "  - 使用 ${YELLOW}pkill -f 'node.*katagoServer'${NC} 停止服务"
-    echo "  - 查看日志: ${YELLOW}tail -f server/logs/katago.log${NC}"
+    echo "  - 查看日志: ${YELLOW}tail -f backend/logs/katago.log${NC}"
     echo ""
     echo -e "${YELLOW}按 Ctrl+C 停止服务${NC}"
     echo ""
@@ -124,7 +124,7 @@ else
     echo ""
     echo "请检查："
     echo "  - 运行 ${YELLOW}./check-backend.sh${NC} 查看详细状态"
-    echo "  - 查看日志: ${YELLOW}tail -f server/logs/katago.log${NC}"
+    echo "  - 查看日志: ${YELLOW}tail -f backend/logs/katago.log${NC}"
     
     # 停止进程
     kill $SERVER_PID 2>/dev/null

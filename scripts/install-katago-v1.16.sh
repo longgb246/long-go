@@ -131,17 +131,17 @@ if [ -d "$PROJECT_DIR" ]; then
     cd "$PROJECT_DIR"
     
     # 创建项目模型目录
-    mkdir -p server/models
+    mkdir -p backend/models
     
     # 复制文件到项目
     echo "   复制模型文件..."
-    cp ~/katago/models/kata1-b18c384nbt-s7709731328-d3715293823.bin.gz server/models/katago_model.bin.gz
+    cp ~/katago/models/kata1-b18c384nbt-s7709731328-d3715293823.bin.gz backend/models/katago_model.bin.gz
     
     echo "   复制配置文件..."
-    cp ~/katago/gtp_config.cfg server/katago_config.cfg
+    cp ~/katago/gtp_config.cfg backend/katago_config.cfg
     
     # 安装服务器依赖
-    if [ -d "server" ] && [ -f "server/package.json" ]; then
+    if [ -d "server" ] && [ -f "backend/package.json" ]; then
         echo "   安装服务器依赖..."
         cd server && npm install && cd ..
         echo "✅ 服务器依赖安装完成"
@@ -151,8 +151,8 @@ if [ -d "$PROJECT_DIR" ]; then
 else
     echo "⚠️  项目目录不存在：$PROJECT_DIR"
     echo "   请手动复制文件："
-    echo "   cp ~/katago/models/*.bin.gz $PROJECT_DIR/server/models/katago_model.bin.gz"
-    echo "   cp ~/katago/gtp_config.cfg $PROJECT_DIR/server/katago_config.cfg"
+    echo "   cp ~/katago/models/*.bin.gz $PROJECT_DIR/backend/models/katago_model.bin.gz"
+    echo "   cp ~/katago/gtp_config.cfg $PROJECT_DIR/backend/katago_config.cfg"
 fi
 echo ""
 
