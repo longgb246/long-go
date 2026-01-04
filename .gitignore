@@ -28,3 +28,6 @@ package-lock.json
 deploy.config.json
 upload.config.json
 *.tar.gz
+
+*.bin.gz
+katago

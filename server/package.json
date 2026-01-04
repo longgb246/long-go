@@ -1,0 +1,17 @@
+{
+  "name": "long-go-katago-server",
+  "version": "1.0.0",
+  "description": "KataGo GTP 服务器，为 LongGo 提供本地 AI 支持",
+  "main": "katagoServer.js",
+  "scripts": {
+    "start": "node katagoServer.js",
+    "dev": "nodemon katagoServer.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

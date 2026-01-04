@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  katago:
+    image: katagotraining/katago:latest
+    container_name: katago-server
+    volumes:
+      - ./server/models:/models
+      - ./server/katago_config.cfg:/config/katago_config.cfg
+    command: gtp -model /models/katago_model.bin.gz -config /config/katago_config.cfg
+    ports:
+      - "3001:3001"
+    restart: unless-stopped

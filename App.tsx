@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Stone, GameMode, BoardSize, Point, GameState, AIHint } from './types';
+import { Stone, GameMode, BoardSize, Point, GameState, AIHint, AILevel, AIAnalysis } from './types';
 import { createEmptyBoard, checkMove } from './logic/goEngine';
-import { getAIMove } from './services/geminiService';
+import { getAIMove, getAIAnalysis } from './services/katagoService';
 import Board from './components/Board';
 
 const App: React.FC = () => {
@@ -13,11 +13,14 @@ const App: React.FC = () => {
     history: [],
     lastMove: null,
     mode: GameMode.HUMAN_VS_AI,
+    playerColor: Stone.BLACK, // 默认玩家执黑
+    aiLevel: AILevel.MASTER,  // 默认大师级
     isGameOver: false,
     captures: { [Stone.BLACK]: 0, [Stone.WHITE]: 0 }
   });
 
   const [aiHint, setAiHint] = useState<AIHint | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null); // 多步推荐分析
   const [isThinking, setIsThinking] = useState(false);
   const [log, setLog] = useState<string[]>(["[系统] 棋局初始化完成。"]);
   const logEndRef = useRef<HTMLDivElement>(null);
@@ -30,8 +33,17 @@ const App: React.FC = () => {
     logEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [log]);
 
-  const handleMove = useCallback((x: number, y: number) => {
-    if (state.isGameOver || isThinking) return;
+  const handleMove = useCallback((x: number, y: number, isAIMove: boolean = false) => {
+    if (state.isGameOver) return;
+
+    // 人机对战模式下，只允许玩家在自己的回合落子（AI 调用时跳过检查）
+    if (!isAIMove && state.mode === GameMode.HUMAN_VS_AI && state.currentPlayer !== state.playerColor) {
+      addLog("[警告] 请等待 AI 思考完成。");
+      return;
+    }
+
+    // 非 AI 调用时，检查是否在思考中
+    if (!isAIMove && isThinking) return;
 
     const { valid, captures } = checkMove(state.board, x, y, state.currentPlayer);
     if (!valid) {
@@ -61,43 +73,65 @@ const App: React.FC = () => {
     }));
 
     setAiHint(null);
+    setAiAnalysis(null); // 清空多步推荐
     const coordStr = `${"ABCDEFGHJKLMNOPQRST"[x]}${state.size - y}`;
     addLog(`[落子] ${state.currentPlayer === Stone.BLACK ? '黑' : '白'}方 -> ${coordStr}`);
+
+    // 🔧 修复：如果是玩家落子且是人机对战模式，立即设置 isThinking
+    if (!isAIMove && state.mode === GameMode.HUMAN_VS_AI && nextPlayer !== state.playerColor) {
+      setIsThinking(true);
+    }
   }, [state, isThinking]);
 
   // AI 自动走棋逻辑
   useEffect(() => {
-    if (state.mode === GameMode.HUMAN_VS_AI && state.currentPlayer === Stone.WHITE && !state.isGameOver) {
+    // 人机对战模式下，当轮到 AI 时自动触发
+    const aiColor = state.playerColor === Stone.BLACK ? Stone.WHITE : Stone.BLACK;
+    if (state.mode === GameMode.HUMAN_VS_AI && state.currentPlayer === aiColor && !state.isGameOver) {
       const triggerAI = async () => {
-        setIsThinking(true);
-        const result = await getAIMove(state.board, state.size, Stone.WHITE);
-        setIsThinking(false);
+        // 🔧 移除 setIsThinking(true)，因为已经在 handleMove 中设置
+        const result = await getAIMove(state.board, state.size, aiColor, state.aiLevel as string);
+        
         if (result) {
-          handleMove(result.x, result.y);
+          // AI 成功落子，清除 isThinking 状态
+          setIsThinking(false);
+          handleMove(result.x, result.y, true); // 传入 true 表示这是 AI 的落子
           setAiHint(result); // AI 走完也更新一下分析数据
         } else {
-          addLog("[系统] 白方停着。");
-          setState(prev => ({ ...prev, currentPlayer: Stone.BLACK }));
+          // AI 停着（pass/resign），保持 isThinking 状态，不允许玩家继续
+          const colorName = aiColor === Stone.BLACK ? '黑' : '白';
+          addLog(`[系统] ${colorName}方停着，请继续落子。`);
+          // 🔧 修复：AI 停着时，切换回玩家并清除 isThinking
+          setIsThinking(false);
+          setState(prev => ({ ...prev, currentPlayer: state.playerColor }));
         }
       };
-      const timer = setTimeout(triggerAI, 600);
-      return () => clearTimeout(timer);
+      // 🔧 移除 setTimeout，立即执行
+      triggerAI();
     }
-  }, [state.currentPlayer, state.mode, state.board, state.size, state.isGameOver, handleMove]);
+  }, [state.currentPlayer, state.mode, state.playerColor, state.aiLevel, state.isGameOver]);
 
   const requestHint = async () => {
     if (isThinking || state.isGameOver) return;
     setIsThinking(true);
-    addLog("[分析] 引擎正在计算当前最优解...");
-    const hint = await getAIMove(state.board, state.size, state.currentPlayer, true);
+    setAiAnalysis(null); // 清空之前的分析
+    const result = await getAIAnalysis(state.board, state.size, state.currentPlayer);
     setIsThinking(false);
-    if (hint) {
-      setAiHint(hint);
-      addLog(`[分析] 建议落子 ${"ABCDEFGHJKLMNOPQRST"[hint.x]}${state.size - hint.y}，胜率: ${hint.winRate}%`);
+    if (result) {
+      console.log('[App] AI Analysis Result:', result);
+      console.log('[App] Moves array length:', result.moves.length);
+      result.moves.forEach((move, index) => {
+        console.log(`[App] Move ${index}: (${move.x}, ${move.y}), order: ${move.order}, winRate: ${move.winRate}%`);
+      });
+      setAiAnalysis(result);
+      setAiHint(result.bestMove);
+      addLog(`[引擎] 分析完成，找到 ${result.moves.length} 个候选着法`);
+    } else {
+      addLog("[引擎] 无法获取分析结果。");
     }
   };
 
-  const resetGame = (newSize: BoardSize = state.size, newMode: GameMode = state.mode) => {
+  const resetGame = (newSize: BoardSize = state.size, newMode: GameMode = state.mode, newPlayerColor: Stone = state.playerColor) => {
     setState({
       board: createEmptyBoard(newSize),
       size: newSize,
@@ -105,11 +139,25 @@ const App: React.FC = () => {
       history: [],
       lastMove: null,
       mode: newMode,
+      playerColor: newPlayerColor,
+      aiLevel: state.aiLevel, // 保持 AI 等级
       isGameOver: false,
       captures: { [Stone.BLACK]: 0, [Stone.WHITE]: 0 }
     });
     setAiHint(null);
-    setLog(["[系统] 棋局重开，黑方先行。"]);
+    setAiAnalysis(null);
+    setLog([`[系统] 新局开始 (${newSize}路)，模式：${newMode === GameMode.HUMAN_VS_AI ? '人机博弈' : '双人对弈'}${newMode === GameMode.HUMAN_VS_AI ? `，玩家执${newPlayerColor === Stone.BLACK ? '黑' : '白'}` : ''}`]);
+  };
+
+  const changeAILevel = (newLevel: AILevel) => {
+    setState(prev => ({ ...prev, aiLevel: newLevel }));
+    const levelNames = {
+      [AILevel.MASTER]: '大师',
+      [AILevel.EXPERT]: '高手',
+      [AILevel.INTERMEDIATE]: '中级',
+      [AILevel.BEGINNER]: '初级'
+    };
+    addLog(`[系统] AI 难度已调整为：${levelNames[newLevel]}`);
   };
 
   return (
@@ -137,10 +185,39 @@ const App: React.FC = () => {
             <div className="flex gap-1">
               {[GameMode.HUMAN_VS_AI, GameMode.HUMAN_VS_HUMAN].map(m => (
                 <button key={m} onClick={() => resetGame(state.size, m)} className={`flex-1 py-2 rounded font-bold text-xs border ${state.mode === m ? 'bg-[#5d4037] text-white' : 'bg-white/40 border-[#d1c4a9] text-[#5d4037]'}`}>
-                  {m === GameMode.HUMAN_VS_AI ? '引擎分析' : '双人对弈'}
+                  {m === GameMode.HUMAN_VS_AI ? '人机博弈' : '双人对弈'}
                 </button>
               ))}
             </div>
+            {state.mode === GameMode.HUMAN_VS_AI && (
+              <>
+                <div className="flex gap-1">
+                  <button onClick={() => resetGame(state.size, state.mode, Stone.BLACK)} className={`flex-1 py-2 rounded font-bold text-xs border ${state.playerColor === Stone.BLACK ? 'bg-[#5d4037] text-white' : 'bg-white/40 border-[#d1c4a9] text-[#5d4037]'}`}>
+                    玩家执黑
+                  </button>
+                  <button onClick={() => resetGame(state.size, state.mode, Stone.WHITE)} className={`flex-1 py-2 rounded font-bold text-xs border ${state.playerColor === Stone.WHITE ? 'bg-[#5d4037] text-white' : 'bg-white/40 border-[#d1c4a9] text-[#5d4037]'}`}>
+                    玩家执白
+                  </button>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-[10px] text-[#8b7355] font-bold">AI 难度等级</div>
+                  <div className="grid grid-cols-2 gap-1">
+                    <button onClick={() => changeAILevel(AILevel.MASTER)} className={`py-2 rounded font-bold text-xs border ${state.aiLevel === AILevel.MASTER ? 'bg-[#5d4037] text-white' : 'bg-white/40 border-[#d1c4a9] text-[#5d4037]'}`}>
+                      🏆 大师
+                    </button>
+                    <button onClick={() => changeAILevel(AILevel.EXPERT)} className={`py-2 rounded font-bold text-xs border ${state.aiLevel === AILevel.EXPERT ? 'bg-[#5d4037] text-white' : 'bg-white/40 border-[#d1c4a9] text-[#5d4037]'}`}>
+                      ⭐ 高手
+                    </button>
+                    <button onClick={() => changeAILevel(AILevel.INTERMEDIATE)} className={`py-2 rounded font-bold text-xs border ${state.aiLevel === AILevel.INTERMEDIATE ? 'bg-[#5d4037] text-white' : 'bg-white/40 border-[#d1c4a9] text-[#5d4037]'}`}>
+                      📚 中级
+                    </button>
+                    <button onClick={() => changeAILevel(AILevel.BEGINNER)} className={`py-2 rounded font-bold text-xs border ${state.aiLevel === AILevel.BEGINNER ? 'bg-[#5d4037] text-white' : 'bg-white/40 border-[#d1c4a9] text-[#5d4037]'}`}>
+                      🌱 初级
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
             <button onClick={requestHint} disabled={isThinking} className="w-full bg-[#8b7355] hover:bg-[#5d4037] text-white py-3 rounded-lg font-serif font-bold text-md shadow-lg transition-all active:scale-95 disabled:opacity-50">
               {isThinking ? '正在拆解棋局...' : '请求引擎分析 (KataMode)'}
             </button>
@@ -210,7 +287,9 @@ const App: React.FC = () => {
           board={state.board}
           onMove={handleMove}
           lastMove={state.lastMove}
-          hint={aiHint}
+          hints={aiAnalysis?.moves || []}
+          isThinking={isThinking}
+          isPlayerTurn={state.mode === GameMode.HUMAN_VS_AI ? state.currentPlayer === state.playerColor : true}
         />
       </main>
 
