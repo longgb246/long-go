@@ -40,7 +40,7 @@
 
 ## 🎯 项目简介
 
-**渐进围棋（LongGo）** 是一款现代化的 Web 围棋应用，将传统围棋玩法与尖端 AI 分析技术完美结合。基于 React 和 TypeScript 构建，利用 Google Gemini AI 提供媲美 KataGo 的专业级棋局分析、着法建议和战略洞察。
+**渐进围棋（LongGo）** 是一款现代化的 Web 围棋应用，将传统围棋玩法与尖端 AI 分析技术完美结合。基于 React 和 TypeScript 构建，集成 KataGo 引擎提供专业级棋局分析、着法建议和战略洞察。
 ### 核心亮点
 
 - 🎮 **多种棋盘规格**：支持 9×9、13×13 和 19×19 三种标准棋盘
@@ -56,7 +56,7 @@
 
 ### 对弈模式
 
-- **人机对弈（引擎分析模式）**：与 Gemini 驱动的 AI 引擎对弈
+- **人机对弈（引擎分析模式）**：与 KataGo AI 引擎对弈，支持多个难度等级
 - **双人对弈（本地模式）**：本地双人练习模式
 
 ### AI 能力
@@ -109,14 +109,8 @@
 
 - **Node.js**：16.x 或更高版本
 - **npm**：7.x 或更高版本（随 Node.js 一起安装）
-- **Google Gemini API 密钥**：AI 功能必需
-
-### 获取 Gemini API 密钥
-
-1. 访问 [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. 使用 Google 账号登录
-3. 创建新的 API 密钥
-4. 复制密钥用于配置
+- **Python**：3.8 或更高版本（后端服务需要）
+- **KataGo**：AI 引擎（后端会自动配置）
 
 ---
 
@@ -131,43 +125,45 @@ cd long-go
 
 ### 2. 安装依赖
 
+**前端依赖：**
+
 ```bash
+cd frontend
 npm install
 ```
 
 这将安装所有必需的包：
 - `react` & `react-dom`：UI 框架
-- `@google/genai`：Gemini AI SDK
 - `vite`：构建工具和开发服务器
 - `typescript`：类型安全
 - `@vitejs/plugin-react`：Vite 的 React 支持
+
+**后端依赖：**
+
+```bash
+cd backend
+pip install -r requirements.txt
+```
 
 ---
 
 ## ⚙️ 配置说明
 
-### 环境变量
+### 后端配置
 
-在项目根目录创建 `.env.local` 文件：
+后端服务默认运行在 `http://localhost:3001`，KataGo 引擎会自动配置和启动。
 
-```bash
-GEMINI_API_KEY=你的API密钥
-```
+### 前端配置
 
-**重要提示**：切勿将 API 密钥提交到版本控制系统。`.env.local` 文件已包含在 `.gitignore` 中。
+前端默认连接到 `http://localhost:3001/api` 获取 AI 分析。
 
-### Vite 配置
-
-项目使用 Vite 进行开发和构建。配置文件位于 `vite.config.ts`：
+配置文件位于 `frontend/vite.config.ts`：
 
 ```typescript
 {
   server: {
     port: 3000,
     host: '0.0.0.0'
-  },
-  define: {
-    'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY)
   }
 }
 ```
@@ -178,13 +174,23 @@ GEMINI_API_KEY=你的API密钥
 
 ### 开发模式
 
-启动开发服务器：
+**1. 启动后端服务（KataGo 引擎）：**
 
 ```bash
+cd backend
+python main.py
+```
+
+后端服务将在 `http://localhost:3001` 运行
+
+**2. 启动前端开发服务器：**
+
+```bash
+cd frontend
 npm run dev
 ```
 
-应用将在 `http://localhost:3000` 运行
+前端应用将在 `http://localhost:3000` 运行
 
 ### 对弈操作
 
@@ -210,30 +216,42 @@ AI 提供以下信息：
 
 ```
 long-go/
-├── components/          # React 组件
-│   ├── Board.tsx       # 主棋盘组件
-│   └── Stone.tsx       # 单个棋子渲染
-├── logic/              # 游戏逻辑
-│   └── goEngine.ts     # 围棋规则实现
-├── services/           # 外部服务
-│   └── geminiService.ts # Gemini AI 集成
-├── types.ts            # TypeScript 类型定义
-├── App.tsx             # 主应用组件
-├── index.tsx           # 应用入口
-├── index.html          # HTML 模板
-├── vite.config.ts      # Vite 配置
-├── tsconfig.json       # TypeScript 配置
-├── package.json        # 项目依赖
-└── README.md           # 本文件
+├── frontend/                # 前端应用
+│   ├── src/
+│   │   ├── components/      # React 组件
+│   │   │   ├── Board.tsx   # 主棋盘组件
+│   │   │   └── Stone.tsx   # 单个棋子渲染
+│   │   ├── logic/          # 游戏逻辑
+│   │   │   └── goEngine.ts # 围棋规则实现
+│   │   ├── services/       # 外部服务
+│   │   │   └── katagoService.ts # KataGo API 集成
+│   │   ├── types.ts        # TypeScript 类型定义
+│   │   ├── App.tsx         # 主应用组件
+│   │   └── index.tsx       # 应用入口
+│   ├── vite.config.ts      # Vite 配置
+│   ├── tsconfig.json       # TypeScript 配置
+│   └── package.json        # 前端依赖
+├── backend/                # 后端服务
+│   ├── main.py            # Flask 服务器
+│   ├── katago_engine.py   # KataGo 引擎封装
+│   └── requirements.txt   # Python 依赖
+├── sources/               # 资源文件
+│   └── imgs/             # 效果图
+└── README.md             # 本文件
 ```
 
 ### 核心文件说明
 
+**前端：**
 - **`App.tsx`**：主游戏逻辑、状态管理和 UI 布局
 - **`types.ts`**：游戏状态、着手和 AI 响应的 TypeScript 接口
 - **`logic/goEngine.ts`**：核心围棋规则（提子检测、着手验证）
-- **`services/geminiService.ts`**：Gemini API 集成，用于 AI 分析
+- **`services/katagoService.ts`**：KataGo API 集成，用于 AI 分析
 - **`components/Board.tsx`**：可交互的棋盘渲染和着手处理
+
+**后端：**
+- **`main.py`**：Flask API 服务器，处理前端请求
+- **`katago_engine.py`**：KataGo 引擎封装和通信
 
 ---
 
@@ -263,9 +281,10 @@ App（主应用）
 
 1. 用户点击棋盘 → `handleMove()` 验证并更新状态
 2. 状态变化触发 AI 回合（如果在人机模式）
-3. `getAIMove()` 调用 Gemini API 传递棋盘局面
-4. AI 响应更新棋盘并显示分析
-5. UI 通过动画和日志反映新状态
+3. `getAIMove()` 调用后端 API 传递棋盘局面
+4. 后端通过 KataGo 引擎计算最佳着法
+5. AI 响应更新棋盘并显示分析
+6. UI 通过动画和日志反映新状态
 
 ---
 
@@ -280,8 +299,9 @@ App（主应用）
 
 ### AI 与后端
 
-- **Google Gemini API**：AI 驱动的棋局分析
-- **@google/genai SDK**：官方 Gemini 客户端库
+- **KataGo**：世界顶级开源围棋 AI 引擎
+- **Flask**：Python Web 框架，提供 RESTful API
+- **Python 3.8+**：后端服务运行环境
 
 ### 开发工具
 
@@ -292,35 +312,51 @@ App（主应用）
 
 ## 🤖 API 集成
 
-### Gemini 服务
+### KataGo 服务
 
-`geminiService.ts` 模块处理所有 AI 交互：
+`katagoService.ts` 模块处理所有 AI 交互：
 
 ```typescript
 export const getAIMove = async (
   board: Stone[][],
   size: BoardSize,
   player: Stone,
-  isHint: boolean = false
+  aiLevel: string
 ): Promise<AIHint | null>
+
+export const getAIAnalysis = async (
+  board: Stone[][],
+  size: BoardSize,
+  player: Stone
+): Promise<{ moves: AIHint[]; bestMove: AIHint } | null>
 ```
+
+### API 端点
+
+- **`POST /api/ai-move`**：获取 AI 的下一步着法
+- **`POST /api/ai-analysis`**：获取多步候选着法分析
+- **`GET /api/health`**：检查 KataGo 服务状态
 
 ### API 请求流程
 
-1. 将棋盘状态转换为坐标记谱
-2. 构建包含游戏上下文的提示词
-3. 向 Gemini 请求结构化 JSON 响应
-4. 解析并验证 AI 响应
-5. 将坐标转换回棋盘位置
+1. 前端将棋盘状态转换为数字数组（0=空, 1=黑, 2=白）
+2. 发送 POST 请求到后端 API
+3. 后端调用 KataGo 引擎进行分析
+4. KataGo 返回着法建议、胜率、目数等数据
+5. 后端解析并格式化响应
+6. 前端接收并更新 UI
 
 ### 响应数据结构
 
 ```typescript
 {
-  coordinate: string,    // 如 "Q16"
-  winRate: number,       // 0-100
-  scoreLead: number,     // 正数表示领先
-  reason: string         // 战略解释
+  x: number,            // 横坐标
+  y: number,            // 纵坐标
+  winRate: number,      // 胜率 0-100
+  scoreLead: number,    // 目数领先
+  visits: number,       // 访问次数
+  order: number,        // 推荐顺序
+  reason: string        // 战略解释
 }
 ```
 
@@ -373,9 +409,11 @@ npm run preview
 - **GitHub Pages**：使用 Actions 的静态托管
 - **自定义服务器**：使用任何 Web 服务器提供 `dist/` 文件夹
 
-### 生产环境变量
+### 部署注意事项
 
-确保部署平台已配置 `GEMINI_API_KEY` 环境变量。
+- 确保后端服务和 KataGo 引擎正确配置
+- 前端需要能够访问后端 API 地址
+- 建议使用 Docker 容器化部署以简化环境配置
 
 ---
 
@@ -383,15 +421,16 @@ npm run preview
 
 ### 常见问题解答
 
-**API 密钥无效**
-- 验证密钥在 `.env.local` 中设置正确
-- 确保没有多余的空格或引号
-- 修改环境变量后重启开发服务器
+**后端服务无法启动**
+- 检查 Python 版本是否 >= 3.8
+- 确保所有 Python 依赖已安装
+- 查看后端日志了解详细错误信息
 
 **AI 无响应**
+- 确认后端服务正在运行（`http://localhost:3001`）
 - 检查浏览器控制台的 API 错误
 - 验证网络连接
-- 确认 Gemini API 配额未超限
+- 查看后端日志确认 KataGo 引擎状态
 
 **棋盘无法渲染**
 - 清除浏览器缓存
@@ -432,10 +471,11 @@ npm run preview
 
 ## 🙏 致谢
 
-- **Google Gemini**：提供强大的 AI 能力
-- **围棋社区**：提供丰富的战略深度
+- **KataGo 项目**：提供世界顶级的开源围棋 AI 引擎
+- **围棋社区**：提供丰富的战略深度和宝贵建议
 - **React 团队**：提供优秀的 UI 框架
 - **Vite 团队**：提供极速构建工具
+- **Flask 社区**：提供简洁高效的 Web 框架
 
 ---
 
