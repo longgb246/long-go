@@ -215,23 +215,25 @@ const Board: React.FC<BoardProps> = ({ size, board, onMove, lastMove, hints, isT
                         
                         return (
                           <>
-                            {/* 圆圈 + 排名数字 */}
-                            <div className={`relative w-[70%] h-[70%] rounded-full ${color.bg} border-2 border-white ${color.shadow} flex items-center justify-center`}>
-                              <span className="text-white font-bold text-[min(2vw,2vh,18px)] drop-shadow-lg">
-                                {order + 1}
-                              </span>
-                            </div>
-                            
-                            {/* 三行数字信息 */}
-                            <div className="absolute top-[calc(100%+2px)] left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-[min(1.2vw,1.2vh,11px)] px-2 py-1 rounded whitespace-nowrap font-mono leading-tight">
-                              <div className="text-center font-bold">{currentHint.winRate.toFixed(1)}%</div>
-                              <div className="text-center">{currentHint.scoreLead > 0 ? '+' : ''}{currentHint.scoreLead.toFixed(1)}</div>
-                              <div className="text-center text-[min(1vw,1vh,9px)] opacity-70">#{order + 1}</div>
+                            {/* 圆圈 + 三行信息 */}
+                            <div className={`relative w-[85%] h-[85%] rounded-full ${color.bg} border-2 border-white ${color.shadow} flex flex-col items-center justify-center py-1`}>
+                              {/* 第1行：胜率 */}
+                              <div className="text-white font-bold text-[min(1.4vw,1.4vh,12px)] leading-none drop-shadow-lg">
+                                {currentHint.winRate.toFixed(1)}%
+                              </div>
+                              {/* 第2行：目数 */}
+                              <div className="text-white font-semibold text-[min(1.2vw,1.2vh,10px)] leading-none mt-0.5 drop-shadow-lg">
+                                {currentHint.scoreLead > 0 ? '+' : ''}{currentHint.scoreLead.toFixed(1)}
+                              </div>
+                              {/* 第3行：排名 */}
+                              <div className="text-white/90 text-[min(1vw,1vh,9px)] leading-none mt-0.5 drop-shadow-lg">
+                                #{order + 1}
+                              </div>
                             </div>
                             
                             {/* 脉冲动画（仅最优解） */}
                             {order === 0 && (
-                              <div className={`absolute w-full h-full rounded-full border-4 ${color.border} animate-ping opacity-30`} />
+                              <div className={`absolute w-[85%] h-[85%] rounded-full border-4 ${color.border} animate-ping opacity-30`} />
                             )}
                           </>
                         );
